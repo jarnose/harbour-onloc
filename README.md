@@ -93,13 +93,26 @@ in `RPMS/`. Qt Creator builds the application with the default options.
 The target's Qt is 5.6; that is why some newer Qt APIs are avoided (see the
 comments in `src/api/onlocclient.cpp`).
 
-Tests for the map code, which needs no Qt, run with plain g++:
+Tests for the map code, which needs no Qt, run with plain g++; `tools/ci.sh`
+runs everything CI runs before the RPMs are built (those tests, a QML check
+for what only a phone would show as a blank page, and the translation
+catalogues - a new `qsTr()` string needs its Finnish text or CI fails):
 
 ```
-tests/run.sh
+tools/ci.sh
 ```
+
+GitHub Actions (`.github/workflows/build.yml`) builds both RPMs for aarch64
+and armv7hl with the SDK image on every push. A tag `v<version>` publishes
+them with checksums as a release, after `tools/check_version.sh` has held the
+tag to both specs' `Version:`, the daemon's version string and a
+`CHANGELOG.md` section.
 
 ## Install
+
+Take the RPMs from the [releases](https://github.com/jarnose/harbour-onloc/releases)
+(unsigned CI builds; the phone warns that they are untrusted) or build them,
+then:
 
 ```
 scp RPMS/harbour-onloc-*.aarch64.rpm RPMS/onloc-daemon-*.aarch64.rpm defaultuser@<phone>:Downloads/

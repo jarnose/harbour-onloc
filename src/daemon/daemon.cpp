@@ -17,7 +17,7 @@
 #include <QTimer>
 
 #ifndef ONLOCD_VERSION
-#define ONLOCD_VERSION "0.1.0"
+#define ONLOCD_VERSION "1.0.0"
 #endif
 
 Daemon::Daemon(const QString &configPath, QObject *parent)
