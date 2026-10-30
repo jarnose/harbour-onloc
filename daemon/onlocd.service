@@ -1,0 +1,16 @@
+[Unit]
+Description=OnLoc background service (location reporting and remote commands)
+Documentation=https://github.com/onloc-app
+
+# Deliberately no Requires= on a bus unit; see suuntosync-notifyd.service for
+# why. If the bus is not up yet the service exits non-zero and Restart below
+# handles it.
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/onlocd
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=user-session.target

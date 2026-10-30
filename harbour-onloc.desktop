@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+X-Nemo-Application-Type=silica-qt5
+Icon=harbour-onloc
+Exec=harbour-onloc
+Name=OnLoc
+
+[X-Sailjail]
+OrganizationName=io.github.jarnose
+ApplicationName=onloc
+# Internet: the user's own Onloc server.
+# Location: this phone's position, sent to that server when tracking is on.
+# Secrets: the session refresh token, in the Sailfish Secrets vault (never
+# written to plain disk).
+Permissions=Internet;Location;Secrets

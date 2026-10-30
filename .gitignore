@@ -1,0 +1,29 @@
+build/
+*.user
+.qmake.stash
+.directory
+
+# In-source sfdk/CMake build artifacts (this project is built in-tree, not
+# out-of-tree, so these land right alongside the source).
+CMakeCache.txt
+CMakeFiles/
+CMakeFiles/progress.marks
+cmake_install.cmake
+Makefile
+harbour-onloc_autogen/
+harbour-onloc
+onlocd
+onlocd_autogen/
+documentation.list
+install_manifest.txt
+QtCreatorDeployment.txt
+
+# sfdk's own per-checkout session state, not project config.
+.sfdk/
+
+# Packaged RPMs and compiled translations (qt5_add_translation's output
+# lands at the project root for this in-source build, not under
+# translations/) - both are build output, not source.
+RPMS/
+*.qm
+.testhome/
