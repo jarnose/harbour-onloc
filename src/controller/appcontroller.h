@@ -46,6 +46,12 @@ class AppController : public QObject
     // The background service (onlocd). Installed = its binary is on the phone;
     // backgroundMode = the user handed it this session (see DaemonConfig).
     Q_PROPERTY(bool daemonInstalled READ daemonInstalled NOTIFY daemonChanged)
+    // This build carries the daemon's package and can offer to install it.
+    Q_PROPERTY(bool daemonInstallable READ daemonInstallable CONSTANT)
+    // The installed daemon reports a different version than this application:
+    // an upgrade of the application should be followed by a reinstall.
+    Q_PROPERTY(bool daemonOutdated READ daemonOutdated NOTIFY daemonChanged)
+    Q_PROPERTY(QString appVersion READ appVersion CONSTANT)
     Q_PROPERTY(bool backgroundMode READ backgroundMode WRITE setBackgroundMode NOTIFY daemonChanged)
     Q_PROPERTY(bool daemonRunning READ daemonRunning NOTIFY daemonChanged)
     Q_PROPERTY(QVariantMap daemonStatus READ daemonStatus NOTIFY daemonChanged)
@@ -78,6 +84,12 @@ public:
     QString trackingStatus() const { return m_trackingStatus; }
 
     bool daemonInstalled() const;
+    bool daemonInstallable() const;
+    bool daemonOutdated() const;
+    QString appVersion() const;
+    // Writes the bundled onloc-daemon RPM to Downloads and asks the system to
+    // open it: the system's installer, outside the sandbox, then asks the user.
+    Q_INVOKABLE void installDaemon();
     bool backgroundMode() const { return m_backgroundMode; }
     void setBackgroundMode(bool on);
     bool daemonRunning() const { return m_daemonRunning; }

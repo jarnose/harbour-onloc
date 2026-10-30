@@ -27,3 +27,11 @@ QtCreatorDeployment.txt
 RPMS/
 *.qm
 .testhome/
+
+# The daemon's RPM, copied here to be embedded in the application: a build
+# product passing through, not source.
+daemon/embed/
+daemon-embed/
+
+# Qt's generated resource source (the embedded daemon RPM as a byte array).
+qrc_*.cpp

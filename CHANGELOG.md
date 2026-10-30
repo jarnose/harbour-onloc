@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- The application carries the background service's package and installs it from
+  *Settings -> Background service*: the package is written to Downloads and the
+  system's installer asks for confirmation. Settings also offers an update when the
+  installed service's version differs from the application's. Needs the `Downloads`
+  permission. Both binaries now take their version from one place, `CMakeLists.txt`.
+
 ## 1.0.0
 
 First release. Two packages: the application, `harbour-onloc`, and the optional background

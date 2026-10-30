@@ -26,7 +26,10 @@ It does two jobs: **see and control** your devices, and **be** one of them.
 
 ## Background service (`onloc-daemon`)
 
-A second, optional package that makes the phone a proper OnLoc device. See
+A second, optional package that makes the phone a proper OnLoc device. The
+application carries it: **Settings -> Background service -> Install the
+service** writes the package to Downloads and the system's installer asks you
+to confirm (allow untrusted software first; these are unsigned builds). See
 [docs/daemon.md](docs/daemon.md) for the design.
 
 - keeps reporting the phone's position after the app is closed, queueing
@@ -76,14 +79,17 @@ first and switches on a 400, so both work.
 
 ## Build
 
-Both packages are built from this tree with the Sailfish SDK's `sfdk`:
+Both packages are built from this tree with the Sailfish SDK's `sfdk`. The
+daemon goes first, because the application embeds its RPM:
 
 ```
-# the application
-sfdk -c target=SailfishOS-5.1.0.11-aarch64 build
-
-# the background service (its spec is in daemon/, not rpm/)
+# 1. the background service (its spec is in daemon/, not rpm/)
 sfdk -c target=SailfishOS-5.1.0.11-aarch64 -c specfile=daemon/onloc-daemon.spec build
+mkdir -p daemon/embed && cp RPMS/onloc-daemon-*.aarch64.rpm daemon/embed/onloc-daemon.rpm
+
+# 2. the application (without daemon/embed/onloc-daemon.rpm it builds, but
+#    Settings has no install entry)
+sfdk -c target=SailfishOS-5.1.0.11-aarch64 build
 ```
 
 Both builds are in-tree and share one CMake cache, so delete `CMakeCache.txt`
@@ -103,7 +109,8 @@ tools/ci.sh
 ```
 
 GitHub Actions (`.github/workflows/build.yml`) builds both RPMs for aarch64
-and armv7hl with the SDK image on every push. A tag `v<version>` publishes
+and armv7hl with the SDK image on every push, the daemon first and embedded in
+the application. A tag `v<version>` publishes
 them with checksums as a release, after `tools/check_version.sh` has held the
 tag to both specs' `Version:`, the daemon's version string and a
 `CHANGELOG.md` section.
@@ -119,7 +126,8 @@ scp RPMS/harbour-onloc-*.aarch64.rpm RPMS/onloc-daemon-*.aarch64.rpm defaultuser
 ssh -t defaultuser@<phone> 'devel-su rpm -Uvh --force Downloads/harbour-onloc-*.rpm Downloads/onloc-daemon-*.rpm'
 ```
 
-The app's permissions are `Internet`, `Location` and `Secrets`. The daemon's
+The app's permissions are `Internet`, `Location`, `Secrets` and `Downloads`
+(to hand the bundled daemon package to the system's installer). The daemon's
 log is `~/.cache/io.github.jarnose/onloc/daemon.log`.
 
 ## Layout

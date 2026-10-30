@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(harbour-onloc CXX)
+project(harbour-onloc VERSION 1.0.0 LANGUAGES CXX)
 
 # The application and the background service are two packages built from one
 # tree: rpm/harbour-onloc.spec builds the application (the defaults), and
@@ -35,7 +35,66 @@ add_executable(harbour-onloc
 
 target_compile_definitions(harbour-onloc PRIVATE
     $<$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>:QT_QML_DEBUG>
+    ONLOC_VERSION="${PROJECT_VERSION}"
 )
+
+# -DDAEMON_RPM=<path to onloc-daemon-*.rpm> embeds that package in the
+# application binary as a Qt resource, and Settings grows an entry that writes
+# it out and asks the system to install it. Same design as harbour-suuntosync's
+# notification daemon: the daemon cannot run in the Sailjail sandbox, so it is
+# its own package, and the application carries it and hands it to the OS's
+# installer, which asks the user. The application installs nothing itself.
+#
+# Optional on purpose: the daemon's RPM is the product of a separate build of
+# this same tree (daemon/onloc-daemon.spec), so requiring it would make the
+# application unbuildable alone and the ordering circular. Without it the
+# application builds as before and the Settings entry is absent, not inert.
+set(DAEMON_RPM "" CACHE FILEPATH
+    "onloc-daemon RPM to embed in the application for in-app install")
+
+# A conventional path as well as the option, because the package build never
+# reaches the cmake command line: the spec calls %cmake, and threading an
+# option through it would need an rpm macro, an sfdk argument and a CI
+# incantation that all have to agree. Dropping the file here needs none of it.
+# CI builds the daemon first and copies it here; gitignored, since a built RPM
+# has no business in the source tree.
+if(NOT DAEMON_RPM AND EXISTS "${CMAKE_SOURCE_DIR}/daemon/embed/onloc-daemon.rpm")
+    set(DAEMON_RPM "${CMAKE_SOURCE_DIR}/daemon/embed/onloc-daemon.rpm")
+endif()
+
+if(DAEMON_RPM)
+    if(NOT EXISTS "${DAEMON_RPM}")
+        message(FATAL_ERROR "DAEMON_RPM does not exist: ${DAEMON_RPM}")
+    endif()
+    # The RPM lead's magic (ed ab ee db): a path typo that pointed at a
+    # tarball would otherwise yield an application that offers an install and
+    # hands the installer something unreadable - found only on a phone.
+    file(READ "${DAEMON_RPM}" DAEMON_RPM_LEAD HEX LIMIT 4)
+    if(NOT DAEMON_RPM_LEAD STREQUAL "edabeedb")
+        message(FATAL_ERROR
+                "DAEMON_RPM is not an RPM (lead is 0x${DAEMON_RPM_LEAD}, "
+                "expected 0xedabeedb): ${DAEMON_RPM}")
+    endif()
+
+    # The .qrc is generated, because it names a path only known at configure
+    # time; the RPM is copied beside it under a stable name so the resource
+    # path carries no version. "daemon-embed", not "rpms": the build is
+    # in-tree, and a one-letter difference between a source directory and a
+    # generated one is a trap. The *resource* path is set by the prefix below.
+    configure_file("${DAEMON_RPM}"
+                    "${CMAKE_CURRENT_BINARY_DIR}/daemon-embed/onloc-daemon.rpm"
+                    COPYONLY)
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/daemon-embed/daemon-rpm.qrc"
+            "<RCC>\n"
+            "  <qresource prefix=\"/rpms\">\n"
+            "    <file>onloc-daemon.rpm</file>\n"
+            "  </qresource>\n"
+            "</RCC>\n")
+    qt5_add_resources(DAEMON_RPM_RESOURCE "${CMAKE_CURRENT_BINARY_DIR}/daemon-embed/daemon-rpm.qrc")
+    target_sources(harbour-onloc PRIVATE ${DAEMON_RPM_RESOURCE})
+    target_compile_definitions(harbour-onloc PRIVATE ONLOC_EMBEDDED_DAEMON_RPM)
+    message(STATUS "Embedding the background service: ${DAEMON_RPM}")
+endif()
 
 target_include_directories(harbour-onloc PRIVATE
     $<BUILD_INTERFACE:
@@ -114,6 +173,7 @@ add_executable(onlocd
     src/daemon/socketioclient.cpp
     src/daemon/commandhandler.cpp
 )
+target_compile_definitions(onlocd PRIVATE ONLOCD_VERSION="${PROJECT_VERSION}")
 target_link_libraries(onlocd
     Qt5::Core
     Qt5::Network

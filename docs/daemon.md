@@ -18,6 +18,41 @@ three, so it lives outside the sandbox and the application stays inside it.
 There is no RPM dependency either way: removing the application from the app
 grid must not fail, and the daemon works on its own once configured.
 
+## Installing it from the application
+
+The application carries the daemon's RPM and offers to install it: *Settings
+-> Background service -> Install the service*. The design is
+harbour-suuntosync's (`docs/embedded-daemon-install.md` there), which in turn
+is how harbour-situations2application does it.
+
+- `DAEMON_RPM` in `CMakeLists.txt` (or the conventional path
+  `daemon/embed/onloc-daemon.rpm`, gitignored) embeds the package as a Qt
+  resource at `:/rpms/onloc-daemon.rpm` and defines `ONLOC_EMBEDDED_DAEMON_RPM`.
+  The RPM's lead magic is checked at configure time. Without it the
+  application builds as before and the Settings section is absent, not inert.
+- `AppController::installDaemon()` writes the resource to
+  `~/Downloads/onloc-daemon.rpm` (fixed name, so a second install replaces the
+  first) and calls `QDesktopServices::openUrl()`. The application installs
+  nothing itself: the system's installer, outside the sandbox, asks the user.
+  Hence the `Downloads` permission. The file is left behind, because `openUrl`
+  is asynchronous and deleting it would race the installer.
+- Sideloading has to be allowed (Settings | Untrusted software); the page says
+  so before the attempt, since the refusal does not explain itself.
+- **Knowing whether it is installed:** from inside the sandbox `/usr/bin`
+  shows only part of the real directory, so the binary cannot be looked for.
+  The daemon writes `daemon-status.json` as soon as it starts, configured or
+  not, and that file's existence is the signal. The same file carries the
+  daemon's version; when it differs from the application's, Settings offers
+  *Update the service*. Both binaries get their version from the one
+  `project(... VERSION ...)` line in `CMakeLists.txt`.
+- **Build order:** the daemon first, its RPM staged at
+  `daemon/embed/onloc-daemon.rpm`, then the application. Built the other way
+  round the application would come out silently without the installer. CI does
+  it in that order, and unpacks the finished application RPM to look for the
+  lead magic in its binary, so the check is on the artifact. The embedded
+  package is architecture-specific and the CI matrix gives one per
+  architecture, so the aarch64 application carries the aarch64 daemon.
+
 ## How the two talk: a file, and a file back
 
 - **App -> daemon:** `~/.config/io.github.jarnose/onloc/daemon.json`, mode 0600.

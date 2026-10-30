@@ -16,8 +16,9 @@
 #include <QSaveFile>
 #include <QTimer>
 
+// From CMakeLists.txt (project VERSION), the one place the version lives.
 #ifndef ONLOCD_VERSION
-#define ONLOCD_VERSION "1.0.0"
+#define ONLOCD_VERSION "unknown"
 #endif
 
 Daemon::Daemon(const QString &configPath, QObject *parent)

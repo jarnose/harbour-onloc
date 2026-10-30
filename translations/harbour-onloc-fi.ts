@@ -103,6 +103,34 @@
         <source>Upload failed: %1</source>
         <translation>Lähetys epäonnistui: %1</translation>
     </message>
+    <message>
+        <source>This build carries no background service to install.</source>
+        <translation>Tämä versio ei sisällä asennettavaa taustapalvelua.</translation>
+    </message>
+    <message>
+        <source>Could not read the bundled service: %1</source>
+        <translation>Mukana tulevaa palvelua ei voitu lukea: %1</translation>
+    </message>
+    <message>
+        <source>No Downloads folder to write the service to.</source>
+        <translation>Ei Lataukset-kansiota, johon palvelun voisi kirjoittaa.</translation>
+    </message>
+    <message>
+        <source>Could not write %1: %2</source>
+        <translation>Tiedostoa %1 ei voitu kirjoittaa: %2</translation>
+    </message>
+    <message>
+        <source>Only %1 of %2 bytes reached %3</source>
+        <translation>Vain %1 / %2 tavua pääsi tiedostoon %3</translation>
+    </message>
+    <message>
+        <source>Saved the service to %1, but nothing on the phone offered to install it. Open it from the file manager.</source>
+        <translation>Palvelu tallennettiin tiedostoon %1, mutta mikään puhelimessa ei tarjonnut sen asennusta. Avaa se tiedostonhallinnasta.</translation>
+    </message>
+    <message>
+        <source>Confirm the install on screen. If it is refused, allow untrusted software in Settings first.</source>
+        <translation>Vahvista asennus näytöllä. Jos se estetään, salli ensin asetuksissa asennus tuntemattomista lähteistä.</translation>
+    </message>
 </context>
 <context>
     <name>CommandHandler</name>
@@ -389,6 +417,38 @@
         <source>Back to the default source</source>
         <translation>Takaisin oletuslähteeseen</translation>
     </message>
+    <message>
+        <source>Background service</source>
+        <translation>Taustapalvelu</translation>
+    </message>
+    <message>
+        <source>The background service is installed, but it is version %1 and this app is %2. Update it to match.</source>
+        <translation>Taustapalvelu on asennettu, mutta sen versio on %1 ja tämän sovelluksen %2. Päivitä se vastaamaan.</translation>
+    </message>
+    <message>
+        <source>The background service is installed. Switch it on under This phone.</source>
+        <translation>Taustapalvelu on asennettu. Kytke se päälle kohdassa Tämä puhelin.</translation>
+    </message>
+    <message>
+        <source>Reporting this phone&apos;s position after the app is closed, and ringing, locking or flashing it from the server, needs a small second package. It cannot be part of this app: it has to keep running and drive sound and the display, which the sandbox does not allow. This app carries it and the system installs it - you will be asked to confirm.</source>
+        <translation>Puhelimen sijainnin raportointi sovelluksen sulkemisen jälkeen sekä sen soittaminen, lukitseminen ja välähdyttäminen palvelimelta vaatii pienen toisen paketin. Se ei voi olla osa tätä sovellusta: sen pitää pysyä käynnissä ja ohjata ääntä ja näyttöä, mitä hiekkalaatikko ei salli. Tämä sovellus kantaa sen mukanaan ja järjestelmä asentaa sen - sinulta pyydetään vahvistus.</translation>
+    </message>
+    <message>
+        <source>Install the service</source>
+        <translation>Asenna palvelu</translation>
+    </message>
+    <message>
+        <source>Update the service</source>
+        <translation>Päivitä palvelu</translation>
+    </message>
+    <message>
+        <source>Reinstall the service</source>
+        <translation>Asenna palvelu uudelleen</translation>
+    </message>
+    <message>
+        <source>If the install is refused, allow untrusted software in Settings | Untrusted software, then try again.</source>
+        <translation>Jos asennus estetään, salli tuntemattomat ohjelmistot kohdassa Asetukset | Tuntemattomat ohjelmistot ja yritä uudelleen.</translation>
+    </message>
 </context>
 <context>
     <name>TrackingPage</name>
@@ -503,6 +563,10 @@
     <message>
         <source>The server no longer accepts the background service&apos;s sign-in. Sign out and in again.</source>
         <translation>Palvelin ei enää hyväksy taustapalvelun kirjautumista. Kirjaudu ulos ja uudelleen sisään.</translation>
+    </message>
+    <message>
+        <source>Install the background service from Settings to keep reporting after the app is closed, and to let the OnLoc server ring, lock or flash this phone.</source>
+        <translation>Asenna taustapalvelu asetuksista, jotta raportointi jatkuu sovelluksen sulkemisen jälkeen ja OnLoc-palvelin voi soittaa, lukita tai välähdyttää tämän puhelimen.</translation>
     </message>
 </context>
 </TS>

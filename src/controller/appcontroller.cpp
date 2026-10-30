@@ -4,6 +4,7 @@
 #include "../shared/daemonconfig.h"
 #include "../shared/locationjson.h"
 
+#include <QDesktopServices>
 #include <QDir>
 #include <QFile>
 #include <QGeoCoordinate>
@@ -16,6 +17,7 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QTimer>
+#include <QUrl>
 
 namespace {
 // OpenFreeMap's TileJSON. Not a tile template: the template carries a dated
@@ -23,6 +25,15 @@ namespace {
 // current one from this. No account or key; the attribution is drawn on the
 // map. See docs/base-map.md.
 const QString kDefaultMapTileUrl = QStringLiteral("https://tiles.openfreemap.org/planet");
+
+// The resource path the generated .qrc declares - see DAEMON_RPM in
+// CMakeLists.txt. Named once so a rename cannot leave writer and reader
+// disagreeing silently. A char array, so it is plain ASCII in the binary.
+const char *const kDaemonResource = ":/rpms/onloc-daemon.rpm";
+
+#ifndef ONLOC_VERSION
+#define ONLOC_VERSION "unknown"
+#endif
 
 const QString kRefreshTokenSecret = QStringLiteral("refresh_token");
 
@@ -395,6 +406,83 @@ bool AppController::daemonInstalled() const
     return DaemonConfig::daemonInstalled();
 }
 
+bool AppController::daemonInstallable() const
+{
+#ifdef ONLOC_EMBEDDED_DAEMON_RPM
+    // The macro says the build embedded one; this says the resource is really
+    // there. They can only disagree through a build mistake, and this is the
+    // cheap place to catch it.
+    return QFile::exists(QString::fromLatin1(kDaemonResource));
+#else
+    return false;
+#endif
+}
+
+QString AppController::appVersion() const
+{
+    return QString::fromLatin1(ONLOC_VERSION);
+}
+
+bool AppController::daemonOutdated() const
+{
+    const QString v = m_daemonStatus.value(QStringLiteral("version")).toString();
+    return m_daemonInstalled && !v.isEmpty() && v != appVersion();
+}
+
+void AppController::installDaemon()
+{
+    if (!daemonInstallable()) {
+        emit errorOccurred(tr("This build carries no background service to install."));
+        return;
+    }
+    QFile resource(QString::fromLatin1(kDaemonResource));
+    if (!resource.open(QIODevice::ReadOnly)) {
+        emit errorOccurred(tr("Could not read the bundled service: %1").arg(resource.errorString()));
+        return;
+    }
+    const QByteArray rpm = resource.readAll();
+    resource.close();
+
+    // Not the application's own cache: the system's installer runs outside
+    // this sandbox and cannot see into it, so the file has to land somewhere
+    // shared - which is what the Downloads permission is for.
+    const QString dir = QStandardPaths::writableLocation(QStandardPaths::DownloadLocation);
+    if (dir.isEmpty() || !QDir().mkpath(dir)) {
+        emit errorOccurred(tr("No Downloads folder to write the service to."));
+        return;
+    }
+    // A fixed name, so repeated installs replace the file instead of leaving
+    // one copy per attempt. The version is in the package's own metadata,
+    // which is what the installer shows.
+    const QString path = QDir(dir).filePath(QStringLiteral("onloc-daemon.rpm"));
+    QFile out(path);
+    if (!out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        emit errorOccurred(tr("Could not write %1: %2").arg(path, out.errorString()));
+        return;
+    }
+    const qint64 written = out.write(rpm);
+    out.close();
+    if (written != rpm.size()) {
+        emit errorOccurred(tr("Only %1 of %2 bytes reached %3").arg(written).arg(rpm.size()).arg(path));
+        return;
+    }
+
+    // openUrl() returning true means the request was accepted, not that
+    // anything was installed: the installer's own dialog is next and the user
+    // answers it, which is why this is allowed from a sandboxed application.
+    // The file stays afterwards: the call is asynchronous, so deleting it
+    // would race the installer.
+    if (!QDesktopServices::openUrl(QUrl::fromLocalFile(path))) {
+        emit errorOccurred(tr("Saved the service to %1, but nothing on the phone offered to "
+                               "install it. Open it from the file manager.").arg(path));
+        return;
+    }
+    // Said rather than assumed: an unsigned package is refused unless the
+    // phone allows untrusted software, and the refusal does not explain itself.
+    emit infoOccurred(tr("Confirm the install on screen. If it is refused, allow untrusted "
+                          "software in Settings first."));
+}
+
 bool AppController::useDaemon() const
 {
     return m_backgroundMode && DaemonConfig::daemonInstalled();
@@ -437,14 +525,14 @@ void AppController::pollDaemon()
 {
     QVariantMap status;
     bool running = false;
-    if (useDaemon()) {
-        QFile f(DaemonConfig::statusPath());
-        if (f.open(QIODevice::ReadOnly)) {
-            status = QJsonDocument::fromJson(f.readAll()).object().toVariantMap();
-            // The daemon rewrites its status at least every 30 s.
-            const qint64 updated = status.value(QStringLiteral("updated")).toLongLong();
-            running = updated > 0 && QDateTime::currentMSecsSinceEpoch() - updated < 75000;
-        }
+    // Read whether or not background mode is on: Settings needs to know the
+    // installed daemon's version to offer an update.
+    QFile f(DaemonConfig::statusPath());
+    if (f.open(QIODevice::ReadOnly)) {
+        status = QJsonDocument::fromJson(f.readAll()).object().toVariantMap();
+        // The daemon rewrites its status at least every 30 s.
+        const qint64 updated = status.value(QStringLiteral("updated")).toLongLong();
+        running = updated > 0 && QDateTime::currentMSecsSinceEpoch() - updated < 75000;
     }
     const bool installed = DaemonConfig::daemonInstalled();
     if (running == m_daemonRunning && status == m_daemonStatus && installed == m_daemonInstalled)

@@ -48,9 +48,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # The background service, from the same tree with the application
-      # switched off (daemon/onloc-daemon.spec passes -DBUILD_APP=OFF
-      # -DBUILD_DAEMON=ON).
+      # **The daemon is built first, and the order matters.** The application
+      # embeds the daemon's RPM so it can offer to install it from Settings
+      # (see DAEMON_RPM in CMakeLists.txt), which means the package has to
+      # exist before the application is configured. Built second, the
+      # application would come out silently without the installer - a build
+      # that succeeds and is missing a feature, the worst shape to fail in.
+      #
+      # The background service is built from the same tree with the
+      # application switched off (daemon/onloc-daemon.spec passes
+      # -DBUILD_APP=OFF -DBUILD_DAEMON=ON).
       #
       # The action below cannot build it: its docker.sh runs a bare
       # `mb2 build` with no way to name a SPEC file. So the same image is
@@ -76,11 +83,50 @@ jobs:
               cp RPMS/*.rpm /workspace/RPMS/
             '
 
+      # Where CMakeLists.txt looks for it. One package per architecture, so
+      # this is the matching one by construction - and the glob is checked
+      # rather than trusted, because `cp` with a glob that matched nothing
+      # would leave the application to build quietly without the installer.
+      - name: Stage the daemon RPM for embedding
+        run: |
+          mkdir -p daemon/embed
+          set -- RPMS/onloc-daemon-[0-9]*.rpm
+          test -f "$1" || { echo "no daemon RPM to embed"; exit 1; }
+          test $# -eq 1 || { echo "expected one daemon RPM, got $#: $*"; exit 1; }
+          cp "$1" daemon/embed/onloc-daemon.rpm
+          ls -l daemon/embed/
+
       - name: Build the application RPM
         uses: coderus/github-sfos-build@sfos5
         with:
           release: 5.1.0.11
           arch: ${{ matrix.arch }}
+
+      # Proves the application really carries the package, rather than
+      # trusting that the configure-time message appeared. An RPM's lead magic
+      # is ed ab ee db, and the application's own binary is where it has to
+      # be - not the copy in daemon/embed/.
+      - name: Check the daemon is embedded in the application
+        run: |
+          set -eu
+          set -- RPMS/harbour-onloc-[0-9]*.rpm
+          test $# -eq 1 || { echo "expected one application RPM, got $#: $*"; exit 1; }
+          sudo apt-get install -y rpm2cpio cpio
+          mkdir -p /tmp/appx
+          ( cd /tmp/appx && rpm2cpio "$OLDPWD/$1" | cpio -idm --quiet )
+          test -s /tmp/appx/usr/bin/harbour-onloc \
+              || { echo "could not extract the binary"; exit 1; }
+          python3 - <<'PY'
+          import struct
+          d = open('/tmp/appx/usr/bin/harbour-onloc', 'rb').read()
+          i = d.find(b'\xed\xab\xee\xdb')
+          assert i > 0, 'no RPM lead magic in the application binary'
+          major, minor, typ, arch = struct.unpack('>BBhh', d[i + 4:i + 10])
+          name = d[i + 10:i + 76].split(b'\x00')[0].decode()
+          assert typ == 0, 'embedded RPM is not a binary package (type %d)' % typ
+          assert name.startswith('onloc-daemon'), 'embedded package is %s' % name
+          print('embedded %s, rpm v%d.%d, archnum %d' % (name, major, minor, arch))
+          PY
 
       # One of each, by name: a build that quietly produced only one of the
       # two packages is not a release.

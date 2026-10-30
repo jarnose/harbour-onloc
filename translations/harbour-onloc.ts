@@ -103,6 +103,34 @@
         <source>Upload failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>This build carries no background service to install.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not read the bundled service: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>No Downloads folder to write the service to.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Could not write %1: %2</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Only %1 of %2 bytes reached %3</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Saved the service to %1, but nothing on the phone offered to install it. Open it from the file manager.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Confirm the install on screen. If it is refused, allow untrusted software in Settings first.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CommandHandler</name>
@@ -389,6 +417,38 @@
         <source>Back to the default source</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>Background service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The background service is installed, but it is version %1 and this app is %2. Update it to match.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>The background service is installed. Switch it on under This phone.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reporting this phone&apos;s position after the app is closed, and ringing, locking or flashing it from the server, needs a small second package. It cannot be part of this app: it has to keep running and drive sound and the display, which the sandbox does not allow. This app carries it and the system installs it - you will be asked to confirm.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Install the service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Update the service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Reinstall the service</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>If the install is refused, allow untrusted software in Settings | Untrusted software, then try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>TrackingPage</name>
@@ -502,6 +562,10 @@
     </message>
     <message>
         <source>The server no longer accepts the background service&apos;s sign-in. Sign out and in again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Install the background service from Settings to keep reporting after the app is closed, and to let the OnLoc server ring, lock or flash this phone.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -12,4 +12,8 @@ ApplicationName=onloc
 # Location: this phone's position, sent to that server when tracking is on.
 # Secrets: the session refresh token, in the Sailfish Secrets vault (never
 # written to plain disk).
-Permissions=Internet;Location;Secrets
+# Downloads: writing the bundled onloc-daemon RPM somewhere the system's
+#   package installer can read it. The installer runs outside this sandbox,
+#   so the application's own cache is no use - see
+#   AppController::installDaemon().
+Permissions=Internet;Location;Secrets;Downloads

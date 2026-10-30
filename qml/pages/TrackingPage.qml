@@ -132,8 +132,11 @@ Page {
                 wrapMode: Text.Wrap
                 color: Theme.secondaryHighlightColor
                 font.pixelSize: Theme.fontSizeSmall
-                text: qsTr("Install the onloc-daemon package to keep reporting after the app is closed, "
-                           + "and to let the OnLoc server ring, lock or flash this phone.")
+                text: AppController.daemonInstallable
+                      ? qsTr("Install the background service from Settings to keep reporting after the app "
+                             + "is closed, and to let the OnLoc server ring, lock or flash this phone.")
+                      : qsTr("Install the onloc-daemon package to keep reporting after the app is closed, "
+                             + "and to let the OnLoc server ring, lock or flash this phone.")
             }
 
             TextSwitch {
