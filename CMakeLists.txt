@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.19)
-project(harbour-onloc VERSION 1.0.0 LANGUAGES CXX)
+project(harbour-onloc VERSION 1.1.0 LANGUAGES CXX)
 
 # The application and the background service are two packages built from one
 # tree: rpm/harbour-onloc.spec builds the application (the defaults), and

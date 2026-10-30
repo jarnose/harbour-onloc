@@ -9,7 +9,7 @@
 
 Name:       onloc-daemon
 Summary:    OnLoc background service
-Version:    1.0.0
+Version:    1.1.0
 Release:    1
 License:    MIT
 URL:        https://github.com/onloc-app

@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0
 
 - The application carries the background service's package and installs it from
   *Settings -> Background service*: the package is written to Downloads and the
